@@ -20,7 +20,7 @@
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"
-
+#include "os_core.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -43,9 +43,31 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint32_t stack_task1[STACK_SIZE];
+uint32_t stack_task2[STACK_SIZE];
 
-uint32_t sp_antes, sp_durante, sp_despues;
-uint32_t stackFrame[8]={0};
+uint32_t sp_task1;
+uint32_t sp_task2;
+
+
+
+void task_1(void)
+{
+	int i=1;
+	while(1){
+		i++;
+	}
+
+}
+
+void task_2(void)
+{
+	int j;
+	while(1){
+		j++;
+	}
+
+}
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,9 +118,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		__asm ("mrs %[sp_antes], MSP" : [sp_antes] "=r" (sp_antes));
+
+	  os_init_task(task_1, &stack_task1, &sp_task1);
+	  os_init_task(task_2, &stack_task2, &sp_task2);
+		while (1) {
 			__WFI();
-		__asm ("mrs %[sp_despues], MSP" : [sp_despues] "=r" (sp_despues));
+		}
+		/*__asm ("mrs %[sp_antes], MSP" : [sp_antes] "=r" (sp_antes));
+			__WFI();
+		__asm ("mrs %[sp_despues], MSP" : [sp_despues] "=r" (sp_despues));*/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
