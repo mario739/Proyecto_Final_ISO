@@ -21,6 +21,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "os_core.h"
+#include <string.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -53,18 +54,24 @@ uint32_t sp_task2;
 
 void task_1(void)
 {
-	int i=1;
+	uint16_t i;
+	uint16_t  m;
 	while(1){
 		i++;
+		m++;
+		//sprintf(b,"i=%i, m=%i",i,m);
+		//HAL_UART_Transmit(&huart3,"hola",10,10);
 	}
 
 }
 
 void task_2(void)
 {
-	int j;
+	uint16_t j;
+	uint16_t k;
 	while(1){
 		j++;
+		k++;
 	}
 
 }

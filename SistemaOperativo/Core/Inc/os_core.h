@@ -25,6 +25,7 @@
 #define EXEC_RETURN	0xFFFFFFF9 	//valor que se tiene el EXEC_RETURN que se tiene que cargar al PC para que haga unstacking sin FPU
 
 #define STACK_FRAME_SIZE		8			//Cantidad de registros que se hace el stacking automatico
+#define FULL_REG_STACKING_SIZE 		16	//16 core registers
 
 void os_init_task(void * task, uint32_t *stack_task, uint32_t  *stack_pointer); //funcion para inicializar los punteros a las tareas
 
