@@ -76,11 +76,11 @@ void task2(void)
 
 void task3(void)
 {
-	uint32_t j;
-	uint32_t k;
+	uint16_t j=20;
+	uint16_t k=30;
+	uint32_t r=0;
 	while(1){
-		j++;
-		k++;
+		r=j*k;
 	}
 
 }
