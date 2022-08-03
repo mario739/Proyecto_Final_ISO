@@ -27,6 +27,7 @@
 
 
 
+typedef void (*task_function)( void * );
 
 #define INIT_XPSR 	1 << 24							    //Siempre el bit 24 en 1
 
@@ -45,13 +46,13 @@ typedef enum {
 typedef struct {
 	uint32_t stack_task[STACK_SIZE/4];
 	uint32_t stack_pointer;
-	void* task_pointer;
+	task_function task_pointer;
 	e_state_task state;
 	uint8_t priority;
-	uint32_t ticks_bloked
+	uint32_t ticks_bloked;
 }t_os_task;
 
 
-void os_init_task(void * task, uint32_t *stack_task, uint32_t  *stack_pointer); //funcion para inicializar los punteros a las tareas
+void os_task_create(task_function task, uint32_t *stack_task, uint32_t  *stack_pointer,void*parameter); //funcion para inicializar los punteros a las tareas
 
 #endif

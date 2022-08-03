@@ -8,12 +8,15 @@
 #include "os_task.h"
 
 //Funcion para inicializar las tareas
-void os_init_task(void *task, uint32_t *stack_task, uint32_t  *stack_pointer)
+void os_task_create(task_function task, uint32_t *stack_task, uint32_t  *stack_pointer,void*parameter)
 {
 	stack_task[STACK_SIZE/4 - XPSR] = INIT_XPSR;				//Se carga en el registro 1 de stack el XPRS
 	stack_task[STACK_SIZE/4 - PC_REG] = (uint32_t)task;		//Se carga la dirrecion de la tarea a ejecutar en el PC
 
 	stack_task[STACK_SIZE/4 - LR_PREV_VALUE] = EXEC_RETURN; //Se carga el valor del EXEC_RETURN por que este valor se modifica en el asm al llmar a una funcion
+
+	stack_task[STACK_SIZE/4 -8]=(uint32_t)parameter; //Se coloca el parametro que se desea pasar al registro R0
+
 
 	*stack_pointer = (uint32_t) (stack_task+ STACK_SIZE/4 - FULL_REG_STACKING_SIZE );		//El puntero al stack queda en la posicion 17 en el stack
 }

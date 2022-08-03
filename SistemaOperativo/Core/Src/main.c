@@ -51,36 +51,40 @@ uint32_t sp_task1;
 uint32_t sp_task2;
 uint32_t sp_task3;
 
+uint32_t p1=1;
+uint32_t p2=2;
+uint32_t p3=3;
 
-void task1(void)
+void task1(void*parameter)
 {
 	uint32_t i;
 	uint32_t  m;
 	while(1){
+		//HAL_UART_Transmit_IT(&huart3,"tarea1\r\n",8);
 		i++;
 		m++;
 	}
 
 }
 
-void task2(void)
+void task2(void*parameter)
 {
 	int32_t j;
 	int32_t k;
 	while(1){
+		//HAL_UART_Transmit_IT(&huart3,"tarea2\r\n",8);
 		j++;
 		k++;
 	}
 
 }
 
-void task3(void)
+void task3(void*parameter)
 {
-	uint16_t j=20;
-	uint16_t k=30;
-	uint32_t r=0;
+	uint32_t *i=(uint32_t*)parameter;
 	while(1){
-		r=j*k;
+		//HAL_UART_Transmit_IT(&huart3,"tarea3\r\n",8);
+		*i=*i+5;
 	}
 
 }
@@ -135,14 +139,11 @@ int main(void)
   while (1)
   {
 	  os_init();
-	  os_init_task(task1, &stack_task1, &sp_task1);
-	  os_init_task(task2, &stack_task2, &sp_task2);
-	  os_init_task(task3, &stack_task3, &sp_task3);
+	  os_task_create(task1, &stack_task1, &sp_task1,(void*)&p1);
+	  os_task_create(task2, &stack_task2, &sp_task2,(void*)&p2);
+	  os_task_create(task3, &stack_task3, &sp_task3,(void*)&p3);
 		while (1) {
 		}
-		/*__asm ("mrs %[sp_antes], MSP" : [sp_antes] "=r" (sp_antes));
-			__WFI();
-		__asm ("mrs %[sp_despues], MSP" : [sp_despues] "=r" (sp_despues));*/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
