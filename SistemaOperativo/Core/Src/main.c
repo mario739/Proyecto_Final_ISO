@@ -44,12 +44,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint32_t stack_task1[STACK_SIZE];
-uint32_t stack_task2[STACK_SIZE];
-uint32_t stack_task3[STACK_SIZE];
-uint32_t sp_task1;
-uint32_t sp_task2;
-uint32_t sp_task3;
+
+t_os_task t_task1;
+t_os_task t_task2;
+t_os_task t_task3;
 
 uint32_t p1=1;
 uint32_t p2=2;
@@ -138,10 +136,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	  os_task_create(task1,&t_task1,&p1,1);
+	  os_task_create(task2, &t_task2,&p2,1);
+	  os_task_create(task3, &t_task3,&p3,1);
 	  os_init();
-	  os_task_create(task1, &stack_task1, &sp_task1,(void*)&p1);
-	  os_task_create(task2, &stack_task2, &sp_task2,(void*)&p2);
-	  os_task_create(task3, &stack_task3, &sp_task3,(void*)&p3);
 		while (1) {
 		}
     /* USER CODE END WHILE */

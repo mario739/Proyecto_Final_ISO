@@ -38,21 +38,28 @@ typedef void (*task_function)( void * );
 
 #define MAX_TASK_COUNT 8
 
+#define TASK_IDLE_PRIORITY 3
+
+#define weak   __attribute__((weak))
+
 typedef enum {
 	RUNNING,
 	READY,
 }e_state_task;
 
 typedef struct {
-	uint32_t stack_task[STACK_SIZE/4];
+	uint32_t stack[STACK_SIZE/4];
 	uint32_t stack_pointer;
 	task_function task_pointer;
+	void*parameter;
 	e_state_task state;
 	uint8_t priority;
 	uint32_t ticks_bloked;
 }t_os_task;
 
 
-void os_task_create(task_function task, uint32_t *stack_task, uint32_t  *stack_pointer,void*parameter); //funcion para inicializar los punteros a las tareas
-
+void os_task_create(task_function task, t_os_task *t_task,void*parameter,uint8_t priority); //funcion para inicializar los punteros a las tareas
+void weak tick_hook(void);
+void weak idle_hook(void);
+void  weak error_hook(void);
 #endif

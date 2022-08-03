@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include "os_task.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -193,6 +194,8 @@ void SysTick_Handler(void)
 	__ISB();	//Limpia el pipeline y asugura que todas las instruciones se ejecuten
 
 	__DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
+
+	tick_hook();
   /* USER CODE END SysTick_IRQn 1 */
 }
 
