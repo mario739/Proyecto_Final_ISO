@@ -8,19 +8,8 @@
 	*/
 
 	.syntax unified
-	.global SysTick_Handler
+	.global PendSV_Handler
 
-
-
-
-	/*
-		Se cambia a la seccion .data, donde se almacenan las variables en RAM
-		Para ver data types en assembler
-			--> http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0175m/Cbhifdhe.html
-	*/
-	.data
-		estado: .word 0					//Variable necesaria para seguimiento de siguiente tarea;
-		.extern sp_task1,sp_task2		//Variables donde se guardan los stack pointers
 
 
 	/*
@@ -36,68 +25,26 @@
 
 
 
-SysTick_Handler:
-	ldr r0, =estado		// r0 = &state
-	ldr r1, [r0]		//r1 = *r0
-	tbb [pc,r1]
-tabla:							//construccion de un switch-case en asm
-	.byte (case0-tabla)/2
-	.byte (case1-tabla)/2
-	.byte (case2-tabla)/2
-	.byte (case_end-tabla)/2
+PendSV_Handler:
 
+	/*
+	* Cuando se ingrea al handler de PendSV lo primero que se ejecuta es un push para
+	* guardar los registros R4-R11 y el valor de LR, que en este punto es EXEC_RETURN
+	* El push se hace al reves de como se escribe en la instruccion, por lo que LR
+	* se guarda en la posicion 9 (luego del stack frame). Como la funcion getContextoSiguiente
+	* se llama con un branch con link, el valor del LR es modificado guardando la direccion
+	* de retorno una vez se complete la ejecucion de la funcion
 
+	* El pasaje de argumentos a getContextoSiguiente se hace como especifica el AAPCS siendo
+	* el unico argumento pasado por RO, y el valor de retorno tambien se almacena en R0
+	*
+	* NOTA: El primer ingreso a este handler (luego del reset) implica que el push se hace sobre el
+	* stack inicial, ese stack se pierde porque no hay seguimiento del MSP en el primer ingreso
+	*/
+	push {r4-r11,lr}
+	mrs r0,msp
+	bl get_next_context
+	msr msp,r0
+	pop {r4-r11,lr}		//Recuperados todos los valores de registros
+	bx lr						//se hace un branch indirect con el valor de LR que es nuevamente EXEC_RETURN
 
-/****** Si es el primer ingreso (estado == 0), debemos cargar en MSP el contenido de sp_tarea1 ***
-		NOTA: Observar como es descartado el valor inicial de MSP (se sobreescribe)				*/
-case0:
-	mov r1,1
-	str r1,[r0]				//estado = 1
-
-	ldr r0,=sp_task1		//R0 = &sp_tarea1
-	ldr r1,[r0]				//R1 = *R0
-	msr msp,r1				//MSP = R1 ==> MSP = sp_tarea1
-	//break;
-	pop {R4-R11}
-	b case_end
-
-
-/****** Si se expropio el CPU a la tarea1 (estado == 1), debemos cargar en MSP el contenido de sp_tarea2 ****/
-case1:
-	mov r1,2
-	str r1,[r0]		//estado = 2
-
-	push {r4-r11}			//guardamos en el stack los registros restantes
-
-	ldr r0,=sp_task1		//R0 = &sp_tarea1
-	mrs r1,msp				//R1 = MSP
-	str r1,[r0]				//*R0 = R1 ==> sp_tarea1 = MSP
-
-	ldr r0,=sp_task2		//R0 = &sp_tarea2
-	ldr r1,[r0]				//R1 = *R0
-	msr msp,r1				//MSP = R1 ==> MSP = sp_tarea1
-
-	pop {r4-r11}			//devolvemos a los registros los valores guardados en el stack
-	//break;
-	b case_end
-
-
-/****** Si se expropio el CPU a la tarea2 (estado == 2), debemos cargar en MSP el contenido de sp_tarea1 ****/
-case2:
-	mov r1,1
-	str r1,[r0]		//estado = 1
-
-	push {r4-r11}			//guardamos en el stack los registros restantes
-
-	ldr r0,=sp_task2		//R0 = &sp_tarea2
-	mrs r1,msp				//R1 = MSP
-	str r1,[r0]				//*R0 = R1 ==> sp_tarea2 = MSP
-
-	ldr r0,=sp_task1		//R0 = &sp_tarea1
-	ldr r1,[r0]				//R1 = *R0
-	msr msp,r1				//MSP = R1 ==> MSP = sp_tarea1
-
-	pop {r4-r11}			//devolvemos a los registros los valores guardados en el stack
-
-case_end:
-	bx lr			//Branch indirecto, se carga en PC lo que hay el LR (EXEC_RETURN)

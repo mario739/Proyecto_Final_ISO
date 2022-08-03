@@ -46,29 +46,38 @@
 /* USER CODE BEGIN PV */
 uint32_t stack_task1[STACK_SIZE];
 uint32_t stack_task2[STACK_SIZE];
-
+uint32_t stack_task3[STACK_SIZE];
 uint32_t sp_task1;
 uint32_t sp_task2;
+uint32_t sp_task3;
 
 
-
-void task_1(void)
+void task1(void)
 {
-	uint16_t i;
-	uint16_t  m;
+	uint32_t i;
+	uint32_t  m;
 	while(1){
 		i++;
 		m++;
-		//sprintf(b,"i=%i, m=%i",i,m);
-		//HAL_UART_Transmit(&huart3,"hola",10,10);
 	}
 
 }
 
-void task_2(void)
+void task2(void)
 {
-	uint16_t j;
-	uint16_t k;
+	int32_t j;
+	int32_t k;
+	while(1){
+		j++;
+		k++;
+	}
+
+}
+
+void task3(void)
+{
+	uint32_t j;
+	uint32_t k;
 	while(1){
 		j++;
 		k++;
@@ -125,11 +134,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-	  os_init_task(task_1, &stack_task1, &sp_task1);
-	  os_init_task(task_2, &stack_task2, &sp_task2);
+	  os_init();
+	  os_init_task(task1, &stack_task1, &sp_task1);
+	  os_init_task(task2, &stack_task2, &sp_task2);
+	  os_init_task(task3, &stack_task3, &sp_task3);
 		while (1) {
-			__WFI();
 		}
 		/*__asm ("mrs %[sp_antes], MSP" : [sp_antes] "=r" (sp_antes));
 			__WFI();

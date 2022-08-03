@@ -4,30 +4,28 @@
 
 
 #include <stdint.h>
+#include <stdbool.h>
+#include"os_task.h"
 
-#define STACK_SIZE 256		//tamaño del stack de las tareas
+extern uint32_t sp_task1;
+extern uint32_t sp_task2;
+extern uint32_t sp_task3;
 
+typedef enum {
+	RUN,
+	RESETT
+}e_state_os;
 
-#define XPSR			1				//Primer registro que se coloca en el stack siempre lleva uno en el bit 24
-#define PC_REG		2				//Registro del contador del programa
-#define LR			  		3				//Link register
-
-//Registros de proposito general
-#define R12	    		4
-#define R3			  		5
-#define R2					6
-#define R1					7
-#define R0					8
-
-
-#define INIT_XPSR 	1 << 24		//Siempre el bit 24 en 1
-
-#define EXEC_RETURN	0xFFFFFFF9 	//valor que se tiene el EXEC_RETURN que se tiene que cargar al PC para que haga unstacking sin FPU
-
-#define STACK_FRAME_SIZE		8			//Cantidad de registros que se hace el stacking automatico
-#define FULL_REG_STACKING_SIZE 		16	//16 core registers
-
-void os_init_task(void * task, uint32_t *stack_task, uint32_t  *stack_pointer); //funcion para inicializar los punteros a las tareas
+typedef struct {
+	void* list_task[MAX_TASK_COUNT];
+	e_state_os state_os;
+	bool scheduler_IRQ;
+	uint32_t error;
+	t_os_task* task_current;
+	t_os_task* task_next;
+}t_os_control;
 
 
+void os_init(void);
+uint32_t get_next_context(uint32_t sp_actual);
 #endif
