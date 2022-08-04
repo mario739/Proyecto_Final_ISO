@@ -25,6 +25,7 @@ typedef struct {
 static t_os_control os_control;
 t_os_task t_task_idle;
 
+
 void os_init(void)
 {
 	NVIC_SetPriority(PendSV_IRQn, (1 << __NVIC_PRIO_BITS)-1);  //Seteamos la prioridad mas baja al la excepcion de PendSV
@@ -54,12 +55,21 @@ void os_task_create(task_function task, t_os_task *t_task,void*parameter,uint8_t
 		t_task->task_pointer=task;
 		t_task->parameter=parameter;
 		t_task->priority=priority;
-		t_task->state=READY;
 
+
+		if (i==2)
+		{
+			t_task->state=BLOKED;
+		}
+		else
+		{
+			t_task->state=READY;
+		}
 		//Se adiciona a la lista de tareas
 		os_control.list_task[i]=t_task;
 		os_control.amount_task++;
 		i++;
+
 	}
 	else
 	{
@@ -67,34 +77,94 @@ void os_task_create(task_function task, t_os_task *t_task,void*parameter,uint8_t
 	}
 }
 
-
-uint32_t get_next_context(uint32_t sp_current)
+void os_scheduler(void)
 {
 	static uint8_t i=0;
 	if (os_control.state_os==RESETT)
 	{
 		os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
-		os_control.state_os=NORMAL;
 		os_control.list_task[0]->state=RUNNING;
+		os_control.task_current=os_control.list_task[0];
+		i++;
+	}
+	else
+	{
+		while(i<=os_control.amount_task)
+		{
+				if (i==4)
+				{
+					if (os_control.list_task[i-os_control.amount_task]->state==READY)
+					{
+						os_control.list_task[i-1]->state=READY;
+						os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
+						os_control.list_task[0]->state=RUNNING;
+						os_control.task_current=os_control.list_task[i-1];
+						i=1;
+						break;
+					}
+					else
+					{
+						i=1;
+					}
+				}
+				else
+				{
+					if (os_control.list_task[i]->state==READY)
+					{
+						os_control.list_task[i-1]->state=READY;
+						os_control.task_next=(t_os_task*)os_control.list_task[i]->stack_pointer;
+						os_control.list_task[i]->state=RUNNING;
+						os_control.task_current=os_control.list_task[i-1];
+						i++;
+						break;
+					}
+					else
+					{
+						i++;
+					}
+	}
+}
+
+
+
+
+
+	/*if (os_control.state_os==RESETT)
+	{
+		os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
+		os_control.list_task[0]->state=RUNNING;
+		os_control.task_current=os_control.list_task[0];
 		i++;
 	}
 	else
 	{
 		if (i<os_control.amount_task) {
-			os_control.list_task[i-1]->stack_pointer= sp_current;
 			os_control.list_task[i-1]->state=READY;
 			os_control.task_next=(t_os_task*)os_control.list_task[i]->stack_pointer;
 			os_control.list_task[i]->state=RUNNING;
+			os_control.task_current=os_control.list_task[i-1];
 			i++;
 		}
 		else
 		{
-			os_control.list_task[i-1]->stack_pointer= sp_current;
 			os_control.list_task[i-1]->state=READY;
 			os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
 			os_control.list_task[0]->state=RUNNING;
+			os_control.task_current=os_control.list_task[i-1];
 			i=1;
 		}
+	}*/
+}
+}
+uint32_t get_next_context(uint32_t sp_current)
+{
+	if (os_control.state_os==RESETT)
+	{
+		os_control.state_os=NORMAL;
+	}
+	else
+	{
+		os_control.task_current->stack_pointer= sp_current;
 	}
 	return (uint32_t)os_control.task_next;
 }

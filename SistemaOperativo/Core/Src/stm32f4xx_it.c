@@ -188,14 +188,14 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  os_scheduler();
+  SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; //Se activa la excepcion del PendSV
 
-	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; //Se activa la excepcion del PendSV
+  __ISB();	//Limpia el pipeline y asugura que todas las instruciones se ejecuten
 
-	__ISB();	//Limpia el pipeline y asugura que todas las instruciones se ejecuten
+  __DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
 
-	__DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
-
-	tick_hook();
+  tick_hook();
   /* USER CODE END SysTick_IRQn 1 */
 }
 

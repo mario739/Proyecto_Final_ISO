@@ -7,11 +7,11 @@
 
 #include "os_task.h"
 
-
 void  weak tick_hook(void)
 {
 	__NOP();
 }
+
 void weak idle_hook(void)
 {
 	while(1)
@@ -22,6 +22,7 @@ void weak idle_hook(void)
 
 void  weak error_hook(void)
 {
-	while(1){
+	while(1)
+	{
 	}
 }
