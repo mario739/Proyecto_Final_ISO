@@ -102,10 +102,7 @@ void os_scheduler(void)
 						i=1;
 						break;
 					}
-					else
-					{
-						i=1;
-					}
+					else	i=1;
 				}
 				else
 				{
@@ -118,42 +115,9 @@ void os_scheduler(void)
 						i++;
 						break;
 					}
-					else
-					{
-						i++;
-					}
+					else i++;
 	}
 }
-
-
-
-
-
-	/*if (os_control.state_os==RESETT)
-	{
-		os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
-		os_control.list_task[0]->state=RUNNING;
-		os_control.task_current=os_control.list_task[0];
-		i++;
-	}
-	else
-	{
-		if (i<os_control.amount_task) {
-			os_control.list_task[i-1]->state=READY;
-			os_control.task_next=(t_os_task*)os_control.list_task[i]->stack_pointer;
-			os_control.list_task[i]->state=RUNNING;
-			os_control.task_current=os_control.list_task[i-1];
-			i++;
-		}
-		else
-		{
-			os_control.list_task[i-1]->state=READY;
-			os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
-			os_control.list_task[0]->state=RUNNING;
-			os_control.task_current=os_control.list_task[i-1];
-			i=1;
-		}
-	}*/
 }
 }
 uint32_t get_next_context(uint32_t sp_current)
