@@ -2,8 +2,7 @@
 #define OS_TASK_H
 
 #include <stdint.h>
-
-#define STACK_SIZE 256
+#include "cmsis_gcc.h"
 
 #define XPSR			1				//Primer registro que se coloca en el stack siempre lleva uno en el bit 24
 #define PC_REG		2				//Registro del contador del programa
@@ -25,22 +24,17 @@
 #define R10 			16
 #define R11 			17
 
-
-
-typedef void (*task_function)( void * );
-
+#define STACK_SIZE 256
 #define INIT_XPSR 	1 << 24							    //Siempre el bit 24 en 1
-
 #define EXEC_RETURN	0xFFFFFFF9 				//valor que se tiene el EXEC_RETURN que se tiene que cargar al PC para que haga unstacking sin FPU
-
 #define STACK_FRAME_SIZE		8			            //Cantidad de registros que se hace el stacking automatico
 #define FULL_REG_STACKING_SIZE 		17	//16 core registers se adiciona un registro mas para guardar el lr
-
 #define MAX_TASK_COUNT 8
-
-#define TASK_IDLE_PRIORITY 3
+#define TASK_IDLE_PRIORITY 0
 
 #define weak   __attribute__((weak))
+
+typedef void (*task_function)( void * );
 
 typedef enum {
 	RUNNING,
@@ -57,8 +51,6 @@ typedef struct {
 	uint32_t ticks_bloked;
 }t_os_task;
 
-
-void os_task_create(task_function task, t_os_task *t_task,void*parameter,uint8_t priority); //funcion para inicializar los punteros a las tareas
 void weak tick_hook(void);
 void weak idle_hook(void);
 void  weak error_hook(void);

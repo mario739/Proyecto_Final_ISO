@@ -49,9 +49,9 @@ t_os_task t_task1;
 t_os_task t_task2;
 t_os_task t_task3;
 
-uint32_t p1=1;
-uint32_t p2=2;
-uint32_t p3=3;
+uint32_t arg1=1;
+uint32_t arg2=2;
+uint32_t arg3=3;
 
 void task1(void*parameter)
 {
@@ -137,9 +137,9 @@ int main(void)
   while (1)
   {
 
-	  os_task_create(task1,&t_task1,&p1,1);
-	  os_task_create(task2, &t_task2,&p2,1);
-	  os_task_create(task3, &t_task3,&p3,1);
+	  os_task_create(task1,&t_task1,&arg1,TASK_IDLE_PRIORITY+1);
+	  os_task_create(task2, &t_task2,&arg2,TASK_IDLE_PRIORITY+1);
+	  os_task_create(task3, &t_task3,&arg3,TASK_IDLE_PRIORITY+1);
 	  os_init();
 		while (1) {
 		}

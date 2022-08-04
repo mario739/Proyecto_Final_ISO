@@ -11,11 +11,12 @@
 
 #define MAX_TASK_COUNT 8
 
-
 typedef struct {
-	void* list_task[MAX_TASK_COUNT];
+	t_os_task* list_task[MAX_TASK_COUNT];
 	e_state_os state_os;
+	task_function idle_task;
 	bool scheduler_IRQ;
+	uint8_t amount_task;
 	uint32_t error;
 	t_os_task* task_current;
 	t_os_task* task_next;
@@ -33,44 +34,67 @@ void os_init(void)
 	os_control.task_current=NULL;
 	os_control.task_next=NULL;
 
-	for (uint8_t i = 0; i < MAX_TASK_COUNT; i++)  {
-			os_control.list_task[i] = NULL;
-	}
-
-	 os_task_create(idle_hook,&t_task_idle,(void*)1,1);
+	 os_task_create(idle_hook,&t_task_idle,(void*)1,TASK_IDLE_PRIORITY);
+	 os_control.idle_task=idle_hook;
 }
 
-uint32_t get_next_context(uint32_t sp_actual)  {
-	static int32_t tarea_actual = -1;
-	uint32_t sp_siguiente;
+//Funcion para inicializar las tareas
+void os_task_create(task_function task, t_os_task *t_task,void*parameter,uint8_t priority)
+{
+	static uint8_t i=0;
+	if (NULL!=task)
+	{
+		t_task->stack[STACK_SIZE/4 - XPSR]= INIT_XPSR;					//Se carga en el registro 1 de stack el XPRS
+		t_task->stack[STACK_SIZE/4 - PC_REG]= (uint32_t)task;			//Se carga la dirrecion de la tarea a ejecutar en el PC
+		t_task->stack[STACK_SIZE/4 - LR_PREV_VALUE]= EXEC_RETURN;  //Se carga el valor del EXEC_RETURN por que este valor se modifica en el asm al llmar a una funcion
+		t_task->stack[STACK_SIZE/4 - STACK_FRAME_SIZE]=(uint32_t)parameter; //Se coloca el parametro que se desea pasar al registro R0
+		t_task->stack_pointer= (uint32_t) (t_task->stack+ STACK_SIZE/4 - FULL_REG_STACKING_SIZE ); //El puntero al stack queda en la posicion 17 en el stack
 
-	switch(tarea_actual)  {
+		//Se carga los campos de estructura con los parametros pasados a la funcion
+		t_task->task_pointer=task;
+		t_task->parameter=parameter;
+		t_task->priority=priority;
+		t_task->state=READY;
 
-	case 1:
-		t_task1.stack_pointer = sp_actual;
-		sp_siguiente = t_task2.stack_pointer;
-		tarea_actual = 2;
-		break;
-
-	case 2:
-		 t_task2.stack_pointer = sp_actual;
-		sp_siguiente =  t_task3.stack_pointer;
-		tarea_actual = 3;
-		break;
-
-	case 3:
-		 t_task3.stack_pointer = sp_actual;
-		sp_siguiente =  t_task_idle.stack_pointer;
-		tarea_actual = 4;
-		break;
-	case 4:
-		 t_task_idle.stack_pointer = sp_actual;
-		sp_siguiente =  t_task1.stack_pointer;
-		tarea_actual = 1;
-	default:
-		sp_siguiente =  t_task1.stack_pointer;
-		tarea_actual = 1;
-		break;
+		//Se adiciona a la lista de tareas
+		os_control.list_task[i]=t_task;
+		os_control.amount_task++;
+		i++;
 	}
-	return sp_siguiente;
+	else
+	{
+		error_hook();
+	}
+}
+
+
+uint32_t get_next_context(uint32_t sp_current)
+{
+	static uint8_t i=0;
+	if (os_control.state_os==RESETT)
+	{
+		os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
+		os_control.state_os=NORMAL;
+		os_control.list_task[0]->state=RUNNING;
+		i++;
+	}
+	else
+	{
+		if (i<os_control.amount_task) {
+			os_control.list_task[i-1]->stack_pointer= sp_current;
+			os_control.list_task[i-1]->state=READY;
+			os_control.task_next=(t_os_task*)os_control.list_task[i]->stack_pointer;
+			os_control.list_task[i]->state=RUNNING;
+			i++;
+		}
+		else
+		{
+			os_control.list_task[i-1]->stack_pointer= sp_current;
+			os_control.list_task[i-1]->state=READY;
+			os_control.task_next=(t_os_task*)os_control.list_task[0]->stack_pointer;
+			os_control.list_task[0]->state=RUNNING;
+			i=1;
+		}
+	}
+	return (uint32_t)os_control.task_next;
 }
