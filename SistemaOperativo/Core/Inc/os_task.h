@@ -2,6 +2,7 @@
 #define OS_TASK_H
 
 #include <stdint.h>
+#include "list.h"
 #include "cmsis_gcc.h"
 
 #define XPSR			1				//Primer registro que se coloca en el stack siempre lleva uno en el bit 24
