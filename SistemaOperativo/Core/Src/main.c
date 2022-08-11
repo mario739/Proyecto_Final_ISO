@@ -45,14 +45,15 @@
 
 /* USER CODE BEGIN PV */
 
+//estructuras de las tareas
 t_os_task t_task1;
 t_os_task t_task2;
 t_os_task t_task3;
-
+//estructuras de los nodos para usar la lista
 t_node n_task1;
 t_node n_task2;
 t_node n_task3;
-
+//argumentos que se mandan a las tareas
 uint32_t arg1=1;
 uint32_t arg2=2;
 uint32_t arg3=3;
@@ -141,8 +142,8 @@ int main(void)
   while (1)
   {
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+1, &t_task2, &n_task2);
-	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+1, &t_task3, &n_task3);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+2, &t_task2, &n_task2);
+	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
 	  os_init();
 	while (1) {
 	}

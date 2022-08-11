@@ -7,9 +7,10 @@
 #include "os_core.h"
 #include "main.h"
 
-#define MAX_TASK_COUNT 8
-#define NUMBER_OF_LISTS 2
+#define MAX_TASK_COUNT 8	 //Cantidad maximo de tareas
+#define NUMBER_OF_LISTS 2	//
 
+//Estrucutura principal del SO
 typedef struct {
 	t_os_task* list_task[MAX_TASK_COUNT];
 	t_list list_core[NUMBER_OF_LISTS];
@@ -22,14 +23,17 @@ typedef struct {
 	t_os_task* task_next;
 } t_os_control;
 
+//Creacion de la estructura principal del sistema operativo estatica para que no se tenga acceso fuera del archivo
 static t_os_control os_control;
 
+//Variables que utiliza el sistema operativo
 t_os_task task_idle;
 t_node node_idle;
-
 t_list* list_ready = &os_control.list_core[0];
-// t_list* list_bloked = &os_control.list_core[1];
+t_list* list_bloked = &os_control.list_core[1];
 
+
+//Funcion para inicializar las variables de la estrucutra princiapal del SO
 void initialize_os(){
 	os_control.error = 0;
 	os_control.state_os = RESETT;
@@ -40,12 +44,13 @@ void initialize_os(){
 void os_init(void)
 {
 	NVIC_SetPriority(PendSV_IRQn, (1 << __NVIC_PRIO_BITS)-1);  //Seteamos la prioridad mas baja al la excepcion de PendSV
-
+    //Inicializamos la estructura del SO
 	initialize_os();
-
+	//Inicializamos el la para IDLE para el SO
 	os_control_add_task(idle_hook, (void*)1, TASK_IDLE_PRIORITY, &task_idle, &node_idle);
 	os_control.idle_task = idle_hook;
-	sort(list_ready, compare_nodes)
+	//Ordenamos la lista de las tarea READY por su prioridad
+	sort(list_ready, compare_task);
 
 }
 
@@ -62,12 +67,15 @@ void initialize_task(t_os_task* task, task_function fn_task, void*parameter, uin
 {
 	if (NULL!=task)
 	{
+		//Se cargan valores necesarios a los registros para que el sistema funcione correctamente
 		load_stack_task(task, fn_task, parameter);
 
 		//Se carga los campos de estructura con los parametros pasados a la funcion
 		task->task_pointer = fn_task;
 		task->parameter = parameter;
 		task->priority = priority;
+		task->state=READY;
+		task->ticks_bloked=0;
 	}
 	else
 	{
@@ -76,8 +84,9 @@ void initialize_task(t_os_task* task, task_function fn_task, void*parameter, uin
 }
 
 void initialize_node(t_node * node, t_os_task* task){
-	static uint8_t i = 0;
+	static uint8_t i = 0;//contador de nodos inicilizados
 
+	//Se inicializan los nodos de la lista
 	node->next = NULL;
 	node->prev = NULL;
 	node->id = i;
@@ -87,20 +96,24 @@ void initialize_node(t_node * node, t_os_task* task){
 }
 
 void os_control_add_task(task_function fn_task, void*parameter, uint8_t priority, t_os_task* task, t_node* node){
+	//Se iniciliaza la tarea
 	initialize_task(task, fn_task, parameter, priority);
+	//Se inicializa el nodo de la tarea
 	initialize_node(node, task);
+	//Se adiciona el nodo a la lista de tareas ready
 	add_node(list_ready, node,FRONT);
 	os_control.amount_task++;
 }
 
+//Funcion para asignar la nueva tarea a ejecutar a la estructura del OS
 void os_control_add_next(t_node* node){
 	os_control.task_next =  (t_os_task *)node->data;
 }
-
+//Funcion para asignar la tarea actual a la estructura del OS
 void os_control_add_current(t_node* node){
 	os_control.task_current = (t_os_task *)node->data;
 }
-
+//Manejador del sistema operativo
 void os_scheduler(void)
 {
 
@@ -115,6 +128,7 @@ void os_scheduler(void)
 	{
 		if(NULL != node){
 			add_node(list_ready, node, BACK);
+			sort(list_ready, compare_task);
 			os_control_add_current(node);
 
 			node = remove_node(list_ready, list_ready->head->id);
@@ -124,7 +138,7 @@ void os_scheduler(void)
 		}
 	}
 }
-
+//Funcion para obtener el nuevo contexto del sistema
 uint32_t get_next_context(uint32_t sp_current)
 {
 	if (os_control.state_os ==RESETT)
@@ -137,4 +151,5 @@ uint32_t get_next_context(uint32_t sp_current)
 	}
 	return os_control.task_next->stack_pointer;
 }
+
 

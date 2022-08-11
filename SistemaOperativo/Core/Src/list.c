@@ -61,9 +61,6 @@ t_node* remove_node(t_list* list, uint8_t id){
             	temp_head->prev->next = temp_head->next;
             }
             list->size--;
-        	//list->head=list->head->next;
-            //temp_head->prev=NULL;
-            //temp_head->next=temp_head->next->next;
             temp_head->next = NULL;
             temp_head->prev = NULL;
 
@@ -119,5 +116,6 @@ void sort(t_list* list, fn_compare_nodes compare_nodes){
 void init_list(t_list* list)
 {
 	list->head=NULL;
-
+	list->tail=NULL;
+	list->size=0;
 }

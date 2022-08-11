@@ -53,6 +53,8 @@ typedef struct {
 	uint32_t ticks_bloked;
 }t_os_task;
 
+
+int compare_task(t_node* n1, t_node* n2);
 void weak tick_hook(void);
 void weak idle_hook(void);
 void  weak error_hook(void);
