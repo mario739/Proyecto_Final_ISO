@@ -62,8 +62,9 @@ void task1(void*parameter)
 {
 	uint32_t i;
 	uint32_t  m;
-	while(1){
-		//HAL_UART_Transmit_IT(&huart3,"tarea1\r\n",8);
+	while(1)
+	{
+		delay_task(150);
 		i++;
 		m++;
 	}
@@ -74,8 +75,8 @@ void task2(void*parameter)
 {
 	int32_t j;
 	int32_t k;
-	while(1){
-		//HAL_UART_Transmit_IT(&huart3,"tarea2\r\n",8);
+	while(1){;
+		delay_task(50);
 		j++;
 		k++;
 	}
@@ -86,7 +87,7 @@ void task3(void*parameter)
 {
 	uint32_t *i=(uint32_t*)parameter;
 	while(1){
-		//HAL_UART_Transmit_IT(&huart3,"tarea3\r\n",8);
+		delay_task(100);
 		*i=*i+5;
 	}
 
@@ -142,7 +143,7 @@ int main(void)
   while (1)
   {
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+2, &t_task2, &n_task2);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+3, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
 	  os_init();
 	while (1) {

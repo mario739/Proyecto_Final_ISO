@@ -37,12 +37,14 @@
 
 typedef void (*task_function)( void * );
 
+//Enumerador de los estados que las tareas puede soportar
 typedef enum {
 	RUNNING,
 	READY,
 	BLOKED,
 }e_state_task;
 
+//Estructura principal de las tareas
 typedef struct {
 	uint32_t stack[STACK_SIZE/4];
 	uint32_t stack_pointer;
@@ -55,6 +57,7 @@ typedef struct {
 
 
 int compare_task(t_node* n1, t_node* n2);
+void delay_task(uint32_t ticks);
 void weak tick_hook(void);
 void weak idle_hook(void);
 void  weak error_hook(void);

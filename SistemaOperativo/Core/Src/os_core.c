@@ -32,6 +32,7 @@ t_node node_idle;
 t_list* list_ready = &os_control.list_core[0];
 t_list* list_bloked = &os_control.list_core[1];
 
+static void clean_list(t_list* list);
 
 //Funcion para inicializar las variables de la estrucutra princiapal del SO
 void initialize_os(){
@@ -50,6 +51,7 @@ void os_init(void)
 	os_control_add_task(idle_hook, (void*)1, TASK_IDLE_PRIORITY, &task_idle, &node_idle);
 	os_control.idle_task = idle_hook;
 	//Ordenamos la lista de las tarea READY por su prioridad
+    clean_list(list_ready);
 	sort(list_ready, compare_task);
 
 }
@@ -68,14 +70,14 @@ void initialize_task(t_os_task* task, task_function fn_task, void*parameter, uin
 	if (NULL!=task)
 	{
 		//Se cargan valores necesarios a los registros para que el sistema funcione correctamente
-		load_stack_task(task, fn_task, parameter);
+			load_stack_task(task, fn_task, parameter);
 
 		//Se carga los campos de estructura con los parametros pasados a la funcion
-		task->task_pointer = fn_task;
-		task->parameter = parameter;
-		task->priority = priority;
-		task->state=READY;
-		task->ticks_bloked=0;
+			task->task_pointer = fn_task;
+			task->parameter = parameter;
+			task->priority = priority;
+			task->state=READY;
+			task->ticks_bloked=0;
 	}
 	else
 	{
@@ -97,12 +99,12 @@ void initialize_node(t_node * node, t_os_task* task){
 
 void os_control_add_task(task_function fn_task, void*parameter, uint8_t priority, t_os_task* task, t_node* node){
 	//Se iniciliaza la tarea
+	os_control.amount_task++;
 	initialize_task(task, fn_task, parameter, priority);
 	//Se inicializa el nodo de la tarea
 	initialize_node(node, task);
 	//Se adiciona el nodo a la lista de tareas ready
-	add_node(list_ready, node,FRONT);
-	os_control.amount_task++;
+	add_node(list_ready, node,BACK);
 }
 
 //Funcion para asignar la nueva tarea a ejecutar a la estructura del OS
@@ -113,10 +115,66 @@ void os_control_add_next(t_node* node){
 void os_control_add_current(t_node* node){
 	os_control.task_current = (t_os_task *)node->data;
 }
+
+static void clean_list(t_list* list)
+{
+    t_node* temp_head = list->head;
+    t_node*node=NULL;
+    t_node*node2=NULL;
+    while(NULL != temp_head)
+    {
+    	t_os_task* temp_task= (t_os_task *)temp_head->data;
+    	if (list==list_ready)
+    	{
+            if(temp_task->state==BLOKED)
+            {
+            	node2=temp_head->next;
+            	node=remove_node(list_ready, temp_head->id);
+            	add_node(list_bloked, node, BACK);
+            	temp_head=node2;
+            }
+            else
+            {
+            	temp_head = temp_head->next;
+            }
+		}
+    	else if(list==list_bloked)
+    	{
+    		if(temp_task->state==READY)
+    		            {
+    		            	node2=temp_head->next;
+    		            	node=remove_node(list_bloked, temp_head->id);
+    		            	add_node(list_ready, node, BACK);
+    		            	temp_head=node2;
+    		            }
+    		            else
+    		            {
+    		            	temp_head = temp_head->next;
+    		            }
+		}
+    }
+}
+
+void update_time_delay(void)
+{
+	t_node* temp_head = list_bloked->head;
+	while(NULL != temp_head)
+	{
+		t_os_task* temp_task= (t_os_task *)temp_head->data;
+		if (temp_task->ticks_bloked>0 )
+		{
+			temp_task->ticks_bloked--;
+		}
+		else if (temp_task->ticks_bloked==0)
+		{
+			temp_task->state=READY;
+		}
+		temp_head = temp_head->next;
+	}
+}
 //Manejador del sistema operativo
 void os_scheduler(void)
 {
-
 	static t_node* node = NULL;
 
 	if (os_control.state_os == RESETT)
@@ -126,14 +184,19 @@ void os_scheduler(void)
 	}
 	else
 	{
-		if(NULL != node){
+		if(NULL != node)
+		{
 			add_node(list_ready, node, BACK);
+			clean_list(list_ready);
+			clean_list(list_bloked);
 			sort(list_ready, compare_task);
 			os_control_add_current(node);
 
 			node = remove_node(list_ready, list_ready->head->id);
 			os_control_add_next(node);
-		}else{
+		}
+		else
+		{
 			error_hook();
 		}
 	}
@@ -152,4 +215,23 @@ uint32_t get_next_context(uint32_t sp_current)
 	return os_control.task_next->stack_pointer;
 }
 
+t_os_task* get_task_current(void)
+{
+	return os_control.task_next;
+}
+
+void set_pendSV(void)
+{
+	 SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; //Se activa la excepcion del PendSV
+
+	  __ISB();	//Limpia el pipeline y asugura que todas las instruciones se ejecuten
+
+	  __DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
+
+}
+void os_yield(void)
+{
+	os_scheduler();
+	set_pendSV();
+}
 

@@ -20,9 +20,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
-#include "os_task.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "os_task.h"
+#include "os_core.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -188,13 +189,10 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  update_time_delay();
   os_scheduler();
-  SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; //Se activa la excepcion del PendSV
-
-  __ISB();	//Limpia el pipeline y asugura que todas las instruciones se ejecuten
-
-  __DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
-
+  set_pendSV();
   tick_hook();
   /* USER CODE END SysTick_IRQn 1 */
 }

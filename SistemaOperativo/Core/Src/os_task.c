@@ -16,6 +16,19 @@ int compare_task(t_node* n1, t_node* n2)
     return t1->priority < t2->priority;
 }
 
+//Funcion de retardo
+void delay_task(uint32_t ticks)
+{
+	t_os_task* temp_task;
+	temp_task=get_task_current();
+	if (ticks>0)
+	{
+		temp_task->ticks_bloked=ticks;
+		temp_task->state=BLOKED;
+	}
+	os_yield();
+}
+
 /*Funcion  tick hook que es llamada cada tick del sistema implementada como WEAK para que el usuario
 si desea la vuelva a definirr*/
 void  weak tick_hook(void)

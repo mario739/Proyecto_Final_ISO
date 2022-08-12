@@ -59,6 +59,7 @@ t_node* remove_node(t_list* list, uint8_t id){
             	list->tail = temp_head->prev;
             }else{
             	temp_head->prev->next = temp_head->next;
+            	temp_head->next->prev=temp_head->prev;
             }
             list->size--;
             temp_head->next = NULL;
