@@ -57,14 +57,17 @@ t_node n_task3;
 uint32_t arg1=1;
 uint32_t arg2=2;
 uint32_t arg3=3;
-
+//semaforos utilizados
+t_semaphore smf;
 void task1(void*parameter)
 {
 	uint32_t i;
 	uint32_t  m;
 	while(1)
 	{
-		delay_task(150);
+		delay_task(500);
+		HAL_UART_Transmit(&huart3,"task1\r\n",6,10);
+		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
 		i++;
 		m++;
 	}
@@ -75,8 +78,12 @@ void task2(void*parameter)
 {
 	int32_t j;
 	int32_t k;
-	while(1){;
-		delay_task(50);
+	while(1)
+	{
+		semaphore_take(&smf);
+		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
+		//delay_task(100);
+		//HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 		j++;
 		k++;
 	}
@@ -86,8 +93,15 @@ void task2(void*parameter)
 void task3(void*parameter)
 {
 	uint32_t *i=(uint32_t*)parameter;
-	while(1){
-		delay_task(100);
+	while(1)
+	{
+		if (HAL_GPIO_ReadPin(GPIOC, USER_Btn_Pin)==GPIO_PIN_SET)
+		{
+			semaphore_give(&smf);
+		}
+		//delay_task(101);
+		//HAL_UART_Transmit(&huart3,"task3\r\n",6,10);
+		//HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
 		*i=*i+5;
 	}
 
@@ -143,8 +157,9 @@ int main(void)
   while (1)
   {
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+3, &t_task2, &n_task2);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+4, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
+	  semaphore_init(&smf);
 	  os_init();
 	while (1) {
 	}

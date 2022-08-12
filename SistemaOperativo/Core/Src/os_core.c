@@ -77,7 +77,7 @@ void initialize_task(t_os_task* task, task_function fn_task, void*parameter, uin
 			task->parameter = parameter;
 			task->priority = priority;
 			task->state=READY;
-			task->ticks_bloked=0;
+			task->ticks_bloked=-1;
 	}
 	else
 	{
@@ -110,10 +110,13 @@ void os_control_add_task(task_function fn_task, void*parameter, uint8_t priority
 //Funcion para asignar la nueva tarea a ejecutar a la estructura del OS
 void os_control_add_next(t_node* node){
 	os_control.task_next =  (t_os_task *)node->data;
+	//os_control.task_next->state=RUNNING;
+
 }
 //Funcion para asignar la tarea actual a la estructura del OS
 void os_control_add_current(t_node* node){
 	os_control.task_current = (t_os_task *)node->data;
+	//os_control.task_current->state=READY;
 }
 
 static void clean_list(t_list* list)
@@ -165,9 +168,10 @@ void update_time_delay(void)
 		{
 			temp_task->ticks_bloked--;
 		}
-		else if (temp_task->ticks_bloked==0)
+		else if (temp_task->ticks_bloked==0 )
 		{
 			temp_task->state=READY;
+			temp_task->ticks_bloked=-1;
 		}
 		temp_head = temp_head->next;
 	}

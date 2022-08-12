@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "os_task.h"
-
+#include "os_semaphore.h"
 typedef enum {
 	NORMAL,
 	RESETT
