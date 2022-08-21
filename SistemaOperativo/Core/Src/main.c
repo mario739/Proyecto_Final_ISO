@@ -21,6 +21,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "os_core.h"
+#include"os_queue.h"
 #include <string.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -59,15 +60,24 @@ uint32_t arg2=2;
 uint32_t arg3=3;
 //semaforos utilizados
 t_semaphore smf;
+//queue utilizados
+t_os_queue queue1;
+t_os_queue queue2;
+//data par la queue
+uint64_t data_queue=5;
+uint16_t data_queue2;
+uint32_t data_receive=0;
+uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_queue)];
+uint8_t buffer_queue2[QUEUE_LENGTH*sizeof(data_queue2)];
 void task1(void*parameter)
 {
 	uint32_t i;
 	uint32_t  m;
 	while(1)
 	{
-		delay_task(500);
+		/*delay_task(500);
 		HAL_UART_Transmit(&huart3,"task1\r\n",6,10);
-		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
+		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);*/
 		i++;
 		m++;
 	}
@@ -80,10 +90,9 @@ void task2(void*parameter)
 	int32_t k;
 	while(1)
 	{
-		semaphore_take(&smf);
+		delay_task(20);
+		queue_send(&queue1,&data_queue);
 		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
-		//delay_task(100);
-		//HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 		j++;
 		k++;
 	}
@@ -95,13 +104,9 @@ void task3(void*parameter)
 	uint32_t *i=(uint32_t*)parameter;
 	while(1)
 	{
-		if (HAL_GPIO_ReadPin(GPIOC, USER_Btn_Pin)==GPIO_PIN_SET)
-		{
-			semaphore_give(&smf);
-		}
-		//delay_task(101);
-		//HAL_UART_Transmit(&huart3,"task3\r\n",6,10);
-		//HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
+		delay_task(200);
+		queue_receive(&queue1,&data_receive);
+		HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
 		*i=*i+5;
 	}
 
@@ -157,9 +162,11 @@ int main(void)
   while (1)
   {
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+4, &t_task2, &n_task2);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+3, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
 	  semaphore_init(&smf);
+	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_queue));
+	 // init_queue(&queue2, buffer_queue2, QUEUE_LENGTH,sizeof(data_queue2));
 	  os_init();
 	while (1) {
 	}
