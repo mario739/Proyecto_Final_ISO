@@ -35,6 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define QUEUE_LENGTH 10
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,21 +64,27 @@ t_semaphore smf;
 //queue utilizados
 t_os_queue queue1;
 t_os_queue queue2;
-//data par la queue
-uint64_t data_queue=5;
-uint16_t data_queue2;
-uint32_t data_receive=0;
-uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_queue)];
-uint8_t buffer_queue2[QUEUE_LENGTH*sizeof(data_queue2)];
+//data para probar la queue
+typedef struct
+{
+	uint16_t data_16;
+	uint8_t message[4];
+	uint32_t data32;
+}data_send;
+
+data_send data_send_task2={.data_16=50,.message={'h','o','l','a'},.data32=2000};
+uint32_t data_queue;
+uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_send_task2)];
+
+
 void task1(void*parameter)
 {
 	uint32_t i;
 	uint32_t  m;
 	while(1)
 	{
-		/*delay_task(500);
-		HAL_UART_Transmit(&huart3,"task1\r\n",6,10);
-		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);*/
+		delay_task(500);
+		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
 		i++;
 		m++;
 	}
@@ -86,12 +93,12 @@ void task1(void*parameter)
 
 void task2(void*parameter)
 {
-	int32_t j;
+	uint32_t j;
 	int32_t k;
 	while(1)
 	{
-		delay_task(20);
-		queue_send(&queue1,&data_queue);
+		delay_task(10);
+		queue_send(&queue1,&data_send_task2);
 		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 		j++;
 		k++;
@@ -102,10 +109,11 @@ void task2(void*parameter)
 void task3(void*parameter)
 {
 	uint32_t *i=(uint32_t*)parameter;
+	data_send data_send_task3;
 	while(1)
 	{
-		delay_task(200);
-		queue_receive(&queue1,&data_receive);
+		delay_task(20);
+		queue_receive(&queue1,&data_send_task3);
 		HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
 		*i=*i+5;
 	}
@@ -162,11 +170,10 @@ int main(void)
   while (1)
   {
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+3, &t_task2, &n_task2);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+4, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
 	  semaphore_init(&smf);
-	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_queue));
-	 // init_queue(&queue2, buffer_queue2, QUEUE_LENGTH,sizeof(data_queue2));
+	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_send_task2));
 	  os_init();
 	while (1) {
 	}

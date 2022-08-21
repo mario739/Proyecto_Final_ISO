@@ -5,10 +5,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include "os_task.h"
+#include "os_core.h"
 
-#define QUEUE_LENGTH 10
 
+//Estructura de control de las queue
 typedef struct
 {
 	uint8_t* head_data;
