@@ -47,9 +47,12 @@ void queue_send(t_os_queue* queue, void* data)
 		}
 		else
 		{
+			//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
+			os_enter_critical();
 			task_current=get_task_current();
 			queue->task_asso=task_current;
 			task_current->state=BLOKED;
+			os_exit_critical();
 			os_yield();
 		}
 }
@@ -72,9 +75,21 @@ void queue_receive(t_os_queue* queue, void* data)
     }
 	else
 	{
+
+		//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
+		os_enter_critical();
 		task_current=get_task_current();
 		queue->task_asso=task_current;
 		task_current->state=BLOKED;
+		os_exit_critical();
 		os_yield();
 	}
+}
+uint8_t get_queue_count(t_os_queue* queue)
+{
+	if (queue!=NULL)
+	{
+		return queue->count_items;
+	}
+	return 0;
 }

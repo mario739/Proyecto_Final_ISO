@@ -17,6 +17,8 @@ void os_scheduler(void);
 void os_yield(void);
 void set_pendSV(void);
 void os_init(void);
+void os_enter_critical(void);
+void os_exit_critical(void);
 uint32_t get_next_context(uint32_t sp_actual);
 
 #endif

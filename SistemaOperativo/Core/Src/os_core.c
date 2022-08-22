@@ -144,16 +144,16 @@ static void clean_list(t_list* list)
     	else if(list==list_bloked)
     	{
     		if(temp_task->state==READY)
-    		            {
-    		            	node2=temp_head->next;
-    		            	node=remove_node(list_bloked, temp_head->id);
-    		            	add_node(list_ready, node, BACK);
-    		            	temp_head=node2;
-    		            }
-    		            else
-    		            {
-    		            	temp_head = temp_head->next;
-    		            }
+				{
+					node2=temp_head->next;
+					node=remove_node(list_bloked, temp_head->id);
+					add_node(list_ready, node, BACK);
+					temp_head=node2;
+				}
+				else
+				{
+					temp_head = temp_head->next;
+				}
 		}
     }
 }
@@ -237,5 +237,15 @@ void os_yield(void)
 {
 	os_scheduler();
 	set_pendSV();
+}
+
+inline void os_enter_critical(void)
+{
+	__disable_irq();
+}
+
+inline void os_exit_critical(void)
+{
+	__enable_irq();
 }
 

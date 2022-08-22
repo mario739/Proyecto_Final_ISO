@@ -79,6 +79,7 @@ uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_send_task2)];
 
 void task1(void*parameter)
 {
+
 	uint32_t i;
 	uint32_t  m;
 	while(1)
