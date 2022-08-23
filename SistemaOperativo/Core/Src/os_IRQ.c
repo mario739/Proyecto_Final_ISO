@@ -8,10 +8,10 @@
 #include "os_IRQ.h"
 #include "main.h"
 #include "core_cm4.h"
-//extern TIM_HandleTypeDef htim6;
 
 static void* vector_funtions[90];
 
+//Funcion para instalar una irq en el SO
  bool os_install_irq(IRQn_Type irq,void* isr)
  {
 	 if (vector_funtions[irq]==NULL)
@@ -22,6 +22,7 @@ static void* vector_funtions[90];
 	}
 	 return false;
  }
+ //Funcion para remover una irq de SO
  bool os_remove_irq(IRQn_Type irq)
  {
 	 if (vector_funtions[irq]!=NULL) {
@@ -35,18 +36,19 @@ static void* vector_funtions[90];
 {
 	 void (*function_user)(void);
 	 e_state_os state_os;
+	 //Guarda el estado actual de SO
 	 state_os=get_status_os();
-
+	 //Setea al SO en modo IRQ
 	 set_status_os(MODE_IRQ);
 
 	 function_user=vector_funtions[irq];
 	 function_user();
-
+	 //Setea el estado que se guardo anteriormente
 	 set_status_os(state_os);
-
+	 //limpia la bandera de la interrupcion que se atendio
 	 NVIC_ClearPendingIRQ(irq);
-
-	 if (get_status_scheculer_irq())
+	 //Se consulta si alguna tarea cambio su estado por lo tanto se necesita un rescheduling
+	 if (get_status_scheduler_irq())
 	 {
 		 set_status_scheduler_irq(false);
 		 os_yield();

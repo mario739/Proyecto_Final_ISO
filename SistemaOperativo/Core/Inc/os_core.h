@@ -17,7 +17,7 @@ t_os_task* get_task_current(void);
 void update_time_delay(void);
 e_state_os get_status_os(void);
 void set_status_scheduler_irq(bool value);
-bool get_status_scheculer_irq(void);
+bool get_status_scheduler_irq(void);
 void set_status_os(e_state_os status);
 void os_scheduler(void);
 void os_yield(void);

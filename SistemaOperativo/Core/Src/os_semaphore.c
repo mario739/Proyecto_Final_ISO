@@ -6,12 +6,15 @@
  */
 
 #include "os_semaphore.h"
+#include "os_core.h"
 
+//Funcion para inicializar un semaforo binario
 void semaphore_init(t_semaphore* semaphore)
 {
 	semaphore->state=TAKE;
 	semaphore->task_associated=(void*)0;
 }
+//Funcion para tomar un semaforo binario,si el semaforo esta tomado la tarea se bloquea
 void semaphore_take(t_semaphore* semaphore)
 {
 	t_os_task* temp_task;
@@ -24,14 +27,15 @@ void semaphore_take(t_semaphore* semaphore)
 	}
 		semaphore->state=TAKE;
 }
+//Funcion para dar un semaforo, si habia una tarea bloqueada en espera del semaforo esta pasa a READY
 void semaphore_give(t_semaphore *semaphore)
 {
-	t_os_task* temp_task;
-	temp_task=get_task_current();
 	if (semaphore->state==TAKE)
 	{
 		semaphore->state=GIVE;
 		semaphore->task_associated->state=READY;
-		//os_yield();
+		if (get_status_os()==MODE_IRQ) {
+			set_status_scheduler_irq(true);
+		}
 	}
 }

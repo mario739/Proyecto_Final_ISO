@@ -42,7 +42,7 @@ void initialize_os(){
 	os_control.task_current = NULL;
 	os_control.task_next = NULL;
 }
-
+//Funcion para inicialiazar el SO
 void os_init(void)
 {
 	NVIC_SetPriority(PendSV_IRQn, (1 << __NVIC_PRIO_BITS)-1);  //Seteamos la prioridad mas baja al la excepcion de PendSV
@@ -85,7 +85,7 @@ void initialize_task(t_os_task* task, task_function fn_task, void*parameter, uin
 		error_hook();
 	}
 }
-
+//Funcion para inicializar un nodo con su determindad tarea
 void initialize_node(t_node * node, t_os_task* task){
 	static uint8_t i = 0;//contador de nodos inicilizados
 
@@ -119,6 +119,7 @@ void os_control_add_current(t_node* node){
 	os_control.task_current = (t_os_task *)node->data;
 }
 
+//Funcion para limpiar las listas las listas de READY Y BLOQUED
 static void clean_list(t_list* list)
 {
     t_node* temp_head = list->head;
@@ -157,7 +158,7 @@ static void clean_list(t_list* list)
 		}
     }
 }
-
+//Funcion para actualizar los contadores de bloqueado de cada tarea
 void update_time_delay(void)
 {
 	t_node* temp_head = list_bloked->head;
@@ -239,33 +240,33 @@ uint32_t get_next_context(uint32_t sp_current)
 	}
 	return os_control.task_next->stack_pointer;
 }
-
+//funcion para obtener la tarea que esta corriendo actualmente
 t_os_task* get_task_current(void)
 {
 	return os_control.task_next;
 }
-
+//Funcion pata obtener es tado del SO
 e_state_os get_status_os(void)
 {
 	return os_control.state_os;
 }
-
+//Funcion para cambiar el estado del sistema operativo
 void set_status_os(e_state_os status)
 {
 	os_control.state_os= status;
 }
-
+//Funcion para cambiar el status irq del SO
 void set_status_scheduler_irq(bool value)
 {
 	os_control.scheduler_irq=value;
 }
-
-bool get_status_scheculer_irq(void)
+//Funcion para obtener el status irq del SO
+bool get_status_scheduler_irq(void)
 {
 	return os_control.scheduler_irq;
 }
 
-
+//Funcion del pendSV
 void set_pendSV(void)
 {
 	 SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; //Se activa la excepcion del PendSV
@@ -275,16 +276,18 @@ void set_pendSV(void)
 	  __DSB(); //Asegura que todos los accessos a memoria se ayan realizado antes de la siguiente instruccion
 
 }
+//Funcion para hacer un scheduling manualmente
 void os_yield(void)
 {
 	os_scheduler();
 }
 
+//Funcion para desabilitar las interrupciones del sistema
 inline void os_enter_critical(void)
 {
 	__disable_irq();
 }
-
+//Funcionen para activar las interrupciones del sistema
 inline void os_exit_critical(void)
 {
 	__enable_irq();

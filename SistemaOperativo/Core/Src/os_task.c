@@ -6,7 +6,7 @@
  */
 
 #include "os_task.h"
-
+#include "os_core.h"
 /*Funcion de comparacion que se manda a la funcion de ordanamiento para ordenar las tareas
 por priorida donde 0 es la tarea con menor prioridad y el 4 con la mayor prioridad el 0 se le asigna a la tarea IDLE */
 int compare_task(t_node* n1, t_node* n2)
@@ -19,6 +19,11 @@ int compare_task(t_node* n1, t_node* n2)
 //Funcion de retardo
 void delay_task(uint32_t ticks)
 {
+	//Si la funcion delay se llama de un interrupcion se da un error del sistema
+	if (get_status_os()==MODE_IRQ)
+	{
+		error_hook();
+	}
 	t_os_task* temp_task;
 	temp_task=get_task_current();
 	if (ticks>0)

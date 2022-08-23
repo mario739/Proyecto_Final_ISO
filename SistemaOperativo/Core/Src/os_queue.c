@@ -42,18 +42,30 @@ void queue_send(t_os_queue* queue, void* data)
 			if (queue->task_asso!=NULL)
 			{
 				queue->task_asso->state=READY;
-				os_yield();
+				if (get_status_os()==MODE_IRQ)
+				{
+					set_status_scheduler_irq(true);
+				}
+				else
+				{
+						os_yield();
+				}
+
 			}
 		}
 		else
 		{
-			//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
-			os_enter_critical();
-			task_current=get_task_current();
-			queue->task_asso=task_current;
-			task_current->state=BLOKED;
-			os_exit_critical();
-			os_yield();
+			//Si se quiere escribir a una cola llena desde un irq no bloqueara por que es una irq
+			if (get_status_os()!=MODE_IRQ)
+			{
+				//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
+				os_enter_critical();
+				task_current=get_task_current();
+				queue->task_asso=task_current;
+				task_current->state=BLOKED;
+				os_exit_critical();
+				os_yield();
+			}
 		}
 }
 
@@ -70,21 +82,34 @@ void queue_receive(t_os_queue* queue, void* data)
 	    if (queue->task_asso!=NULL)
 	    {
 	    	 queue->task_asso->state=READY;
-		     os_yield();
+	    	 //Si se llamo de una irq se setea el bit para posteriormente hacer un resqueduling
+	    	 if (get_status_os()==MODE_IRQ) {
+				set_status_scheduler_irq(true);
+			}
+	    	 else
+	    	 {
+	    		 os_yield();
+	    	 }
+
 		}
     }
 	else
 	{
+		//Si se quiere leer de un cola basia en modo irq no se bloquea por que es una interrupcion
+		if (get_status_os()!=MODE_IRQ)
+		{
+			//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
+			os_enter_critical();
+			task_current=get_task_current();
+			queue->task_asso=task_current;
+			task_current->state=BLOKED;
+			os_exit_critical();
+			os_yield();
+		}
 
-		//Se agrega un seccion critica al momento de obtener la tarea actual y cambiar su estado
-		os_enter_critical();
-		task_current=get_task_current();
-		queue->task_asso=task_current;
-		task_current->state=BLOKED;
-		os_exit_critical();
-		os_yield();
 	}
 }
+//Funcion para obtener la catidad de elementos en la que se encuentra todavia en la queue
 uint8_t get_queue_count(t_os_queue* queue)
 {
 	if (queue!=NULL)

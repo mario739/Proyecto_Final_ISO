@@ -34,6 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+//Cnatidad maxima de elementos en una cola
 #define QUEUE_LENGTH 10
 /* USER CODE END PD */
 
@@ -46,42 +47,34 @@
 
 /* USER CODE BEGIN PV */
 
-//estructuras de las tareas
+//estructuras de las tareas, se crea una estrutura para cada tarea
 t_os_task t_task1;
 t_os_task t_task2;
 t_os_task t_task3;
+t_os_task t_task4;
 //estructuras de los nodos para usar la lista
 t_node n_task1;
 t_node n_task2;
 t_node n_task3;
+t_node n_task4;
 //argumentos que se mandan a las tareas
 uint32_t arg1=1;
 uint32_t arg2=2;
 uint32_t arg3=3;
+uint32_t arg4=4;
 //semaforos utilizados
 t_semaphore smf;
 //queue utilizados
 t_os_queue queue1;
-t_os_queue queue2;
 //data para probar la queue
-typedef struct
-{
-	uint16_t data_16;
-	uint8_t message[4];
-	uint32_t data32;
-}data_send;
-
-data_send data_send_task2={.data_16=50,.message={'h','o','l','a'},.data32=2000};
-uint8_t data_send_task[24]="data task2 to task3\r\n";
-uint32_t data_queue;
+uint8_t data_send_task[10]="d:t2 a t3\n";
 uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_send_task)];
-
 
 void task1(void*parameter)
 {
 	while(1)
 	{
-		delay_task(500);
+		delay_task(200);
 		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
 	}
 }
@@ -90,23 +83,28 @@ void task2(void*parameter)
 {
 	while(1)
 	{
-		delay_task(10);
+		delay_task(20);
 		queue_send(&queue1,&data_send_task);
 		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
 	}
 }
 void task3(void*parameter)
 {
-	uint8_t data_send_task3[24];
+	uint8_t data_send_task3[10];
 	while(1)
 	{
-		delay_task(20);
+		delay_task(100);
 		queue_receive(&queue1,&data_send_task3);
-		HAL_UART_Transmit(&huart3,&data_send_task3, 24, 10);
+		HAL_UART_Transmit(&huart3,&data_send_task3,10,2);
 		HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
 	}
 
 }
+
+//Funciones de callback para las interrupciones que setea el usuario
+void callback_timer6(void){}
+void callback_gpio(void ){}
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -152,42 +150,24 @@ int main(void)
   MX_TIM6_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t data_receive_huart3=0;
-  void callback_uart3(void)
-  {
-
-
-  }
-
-  void callback_timer6(void)
-  {
-
-  }
-
-  void callback_adc1(void )
-  {
-
-  }
-
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  //Se inicializan las tareas
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
-	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+4, &t_task2, &n_task2);
+	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+3, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
+	  //Se inicializa la queue para el sistema
 	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_send_task));
-	  //os_install_irq(USART3_IRQn,callback_uart3);
-	  //os_install_irq(TIM6_DAC_IRQn, callback_timer6);
-	  os_install_irq(EXTI15_10_IRQn  , callback_adc1);
-	  //HAL_UART_Receive_IT(&huart3,&data_receive_huart3 ,1);
-	  //HAL_TIM_Base_Start_IT(&htim6);
+	  //Se inicializan las interrupciones deseadas
+	  os_install_irq(TIM6_DAC_IRQn, callback_timer6);
+	  os_install_irq(EXTI15_10_IRQn  , callback_gpio);
+	  //Se  inicializa  el sistema operativo
 	  os_init();
-	while (1) {
-	}
+	  //funcion para manejar si u=hubo un error en la inicializacion del SO
+	  error_hook();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
