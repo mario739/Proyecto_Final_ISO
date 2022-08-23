@@ -16,7 +16,8 @@ typedef struct {
 	t_list list_core[NUMBER_OF_LISTS];
 	e_state_os state_os;
 	task_function idle_task;
-	bool scheduler_IRQ;
+	bool context_switch;
+	bool scheduler_irq;
 	uint8_t amount_task;
 	uint32_t error;
 	t_os_task* task_current;
@@ -110,13 +111,12 @@ void os_control_add_task(task_function fn_task, void*parameter, uint8_t priority
 //Funcion para asignar la nueva tarea a ejecutar a la estructura del OS
 void os_control_add_next(t_node* node){
 	os_control.task_next =  (t_os_task *)node->data;
-	//os_control.task_next->state=RUNNING;
+	os_control.task_next->state=RUNNING;
 
 }
 //Funcion para asignar la tarea actual a la estructura del OS
 void os_control_add_current(t_node* node){
 	os_control.task_current = (t_os_task *)node->data;
-	//os_control.task_current->state=READY;
 }
 
 static void clean_list(t_list* list)
@@ -185,19 +185,37 @@ void os_scheduler(void)
 	{
 		node = remove_node(list_ready, list_ready->head->id);
 		os_control_add_next(node);
+		set_pendSV();
 	}
 	else
 	{
 		if(NULL != node)
 		{
+			//Si el sistema operativo estaba en mo scheduling sale de inmediato
+			if (os_control.state_os==SCHUDELING)
+			{
+				return;
+			}
+			//pone al sistema operativo en modo sheduling
+			os_control.state_os=SCHUDELING;
+
 			add_node(list_ready, node, BACK);
 			clean_list(list_ready);
 			clean_list(list_bloked);
+
 			sort(list_ready, compare_task);
 			os_control_add_current(node);
 
 			node = remove_node(list_ready, list_ready->head->id);
 			os_control_add_next(node);
+
+			os_control.state_os=NORMAL;
+
+			//Se verifica si se necesita un cambio de contexto o no
+			if (os_control.task_current!=os_control.task_next)
+			{
+				set_pendSV();
+			}
 		}
 		else
 		{
@@ -214,6 +232,9 @@ uint32_t get_next_context(uint32_t sp_current)
 	}
 	else
 	{
+		if (os_control.task_current->state==RUNNING) {
+			os_control.task_current->state=READY;
+		}
 		os_control.task_current->stack_pointer = sp_current;
 	}
 	return os_control.task_next->stack_pointer;
@@ -223,6 +244,27 @@ t_os_task* get_task_current(void)
 {
 	return os_control.task_next;
 }
+
+e_state_os get_status_os(void)
+{
+	return os_control.state_os;
+}
+
+void set_status_os(e_state_os status)
+{
+	os_control.state_os= status;
+}
+
+void set_status_scheduler_irq(bool value)
+{
+	os_control.scheduler_irq=value;
+}
+
+bool get_status_scheculer_irq(void)
+{
+	return os_control.scheduler_irq;
+}
+
 
 void set_pendSV(void)
 {
@@ -236,7 +278,6 @@ void set_pendSV(void)
 void os_yield(void)
 {
 	os_scheduler();
-	set_pendSV();
 }
 
 inline void os_enter_critical(void)

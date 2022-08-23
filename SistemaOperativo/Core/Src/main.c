@@ -18,14 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "os_core.h"
-#include"os_queue.h"
-#include <string.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,50 +72,38 @@ typedef struct
 }data_send;
 
 data_send data_send_task2={.data_16=50,.message={'h','o','l','a'},.data32=2000};
+uint8_t data_send_task[24]="data task2 to task3\r\n";
 uint32_t data_queue;
-uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_send_task2)];
+uint8_t buffer_queue[QUEUE_LENGTH*sizeof(data_send_task)];
 
 
 void task1(void*parameter)
 {
-
-	uint32_t i;
-	uint32_t  m;
 	while(1)
 	{
 		delay_task(500);
 		HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
-		i++;
-		m++;
 	}
-
 }
 
 void task2(void*parameter)
 {
-	uint32_t j;
-	int32_t k;
 	while(1)
 	{
 		delay_task(10);
-		queue_send(&queue1,&data_send_task2);
+		queue_send(&queue1,&data_send_task);
 		HAL_GPIO_TogglePin(GPIOB, LD1_Pin);
-		j++;
-		k++;
 	}
-
 }
-
 void task3(void*parameter)
 {
-	uint32_t *i=(uint32_t*)parameter;
-	data_send data_send_task3;
+	uint8_t data_send_task3[24];
 	while(1)
 	{
 		delay_task(20);
 		queue_receive(&queue1,&data_send_task3);
+		HAL_UART_Transmit(&huart3,&data_send_task3, 24, 10);
 		HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
-		*i=*i+5;
 	}
 
 }
@@ -162,7 +149,25 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART3_UART_Init();
+  MX_TIM6_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  uint8_t data_receive_huart3=0;
+  void callback_uart3(void)
+  {
+
+
+  }
+
+  void callback_timer6(void)
+  {
+
+  }
+
+  void callback_adc1(void )
+  {
+
+  }
 
   /* USER CODE END 2 */
 
@@ -170,11 +175,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
 	  os_control_add_task(task1, &arg1, TASK_IDLE_PRIORITY+1, &t_task1, &n_task1);
 	  os_control_add_task(task2, &arg2, TASK_IDLE_PRIORITY+4, &t_task2, &n_task2);
 	  os_control_add_task(task3, &arg3, TASK_IDLE_PRIORITY+3, &t_task3, &n_task3);
-	  semaphore_init(&smf);
-	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_send_task2));
+	  init_queue(&queue1, buffer_queue, QUEUE_LENGTH,sizeof(data_send_task));
+	  //os_install_irq(USART3_IRQn,callback_uart3);
+	  //os_install_irq(TIM6_DAC_IRQn, callback_timer6);
+	  os_install_irq(EXTI15_10_IRQn  , callback_adc1);
+	  //HAL_UART_Receive_IT(&huart3,&data_receive_huart3 ,1);
+	  //HAL_TIM_Base_Start_IT(&htim6);
 	  os_init();
 	while (1) {
 	}
